@@ -3,6 +3,7 @@ const functions = require("firebase-functions");
 const express = require("express");
 const bodyParser = require("body-parser");
 const client = require("mailchimp-marketing");
+const crypto = require("crypto")
 require("dotenv").config();
 
 const PORT = 5000;
@@ -54,12 +55,35 @@ const run = async (email, name, tag) => {
       response: "success"
     };
   } catch (error) {
+    const text = JSON.parse(error.response.text).title;
+
+    if(tag == 'pursue' && text == "Member Exists") {
+      let hash = crypto.createHash('md5').update(email).digest("hex")
+
+      try {
+        await client.lists.updateListMemberTags(
+          "08220f2e80",
+          hash,
+          { tags: [{ name: "Pursue", status: "active" }, { name: "Lead", status: "inactive" }] }
+        );
+        return {
+          status: 200,
+          response: "success"
+        };
+      } catch(err) {
+        return {
+          status: err.status,
+          response: err.response.text
+        };
+      }
+    }
+
     return {
       status: error.status,
       response: error.response.text
     };
   }
-};
+}
 
 app.post("/subscribe", (req, res, next) => {
   const {name, email, tag} = req.body;
