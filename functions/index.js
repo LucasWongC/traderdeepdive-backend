@@ -57,14 +57,14 @@ const run = async (email, name, tag) => {
   } catch (error) {
     const text = JSON.parse(error.response.text).title;
 
-    if(tag == 'pursue' && text == "Member Exists") {
+    if(text == "Member Exists") {
       let hash = crypto.createHash('md5').update(email).digest("hex")
 
       try {
         await client.lists.updateListMemberTags(
           "08220f2e80",
           hash,
-          { tags: [{ name: "Pursue", status: "active" }, { name: "Lead", status: "inactive" }] }
+          { tags: [{ name: tag, status: "active" }] }
         );
         return {
           status: 200,
